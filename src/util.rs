@@ -1,5 +1,6 @@
 // util.rs
 use std::f32::consts::PI;
+use std::iter;
 use sdl2::pixels::Color;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
@@ -105,69 +106,48 @@ pub fn simplify_angle(mut angle: f32) -> f32 {
 }
 
 
-
 fn quadratic_bezier_points(p0: (f32, f32), p1: (f32, f32), p2: (f32, f32), steps: usize) -> Vec<(i16, i16)> {
-    let mut points = Vec::with_capacity(steps + 1);
-    for i in 0..=steps {
-        let t = i as f32 / steps as f32;
-        let u = 1.0 - t;
-        let tt = t * t;
-        let uu = u * u;
-
-        let x = uu * p0.0 + 2.0 * u * t * p1.0 + tt * p2.0;
-        let y = uu * p0.1 + 2.0 * u * t * p1.1 + tt * p2.1;
-
-        points.push((x as i16, y as i16));
-    }
-    points
+    let step = 1.0 / steps as f32;
+    iter::successors(Some(0.0), |&t| Some(t + step).filter(|&t| t <= 1.0))
+        .map(|t| {
+            let u = 1.0 - t;
+            let tt = t * t;
+            let uu = u * u;
+            let x = uu * p0.0 + 2.0 * u * t * p1.0 + tt * p2.0;
+            let y = uu * p0.1 + 2.0 * u * t * p1.1 + tt * p2.1;
+            (x as i16, y as i16)
+        })
+        .collect()
 }
 
-fn generate_quadratic_bezier_from_points(points: &Vec<(f32, f32)>, steps: usize) -> Vec<(i16, i16)> {
-    let mut result = Vec::new();
-    
+fn generate_quadratic_bezier_from_points(points: &[(f32, f32)], steps: usize) -> Vec<(i16, i16)> {
     if points.len() < 3 {
-        // Not enough points for a quadratic Bézier curve, return the input converted to i16
         return points.iter().map(|&(x, y)| (x as i16, y as i16)).collect();
     }
 
-    // Loop over consecutive triplets of points
-    for i in 0..points.len() - 2 {
-        let p0 = points[i];
-        let p1 = points[i + 1];
-        let p2 = points[i + 2];
+    let mut result = Vec::with_capacity((points.len() - 2) * steps + 1);
 
-        // Add Bezier points between p0, p1, p2
-        let bezier_points = quadratic_bezier_points(p0, p1, p2, steps);
-
-        // Avoid duplicating points (the first point of the new bezier curve is the last point of the previous one)
-        if i > 0 {
-            result.extend(bezier_points.iter().skip(1));
-        } else {
-            result.extend(bezier_points);
-        }
+    for window in points.windows(3) {
+        let bezier_points = quadratic_bezier_points(window[0], window[1], window[2], steps);
+        result.extend(bezier_points.into_iter().skip(1));
     }
 
-    // If there are an even number of points, handle the final two points as a special case
     if points.len() % 2 == 0 {
-        let last_p0 = points[points.len() - 2];
-        let last_p1 = points[points.len() - 1];
-        let control_point = ((last_p0.0 + last_p1.0) / 2.0, (last_p0.1 + last_p1.1) / 2.0);
-
-        let bezier_points = quadratic_bezier_points(last_p0, control_point, last_p1, steps);
-        result.extend(bezier_points.iter().skip(1));
+        let last_two = &points[points.len() - 2..];
+        let control_point = (
+            (last_two[0].0 + last_two[1].0) / 2.0,
+            (last_two[0].1 + last_two[1].1) / 2.0,
+        );
+        let bezier_points = quadratic_bezier_points(last_two[0], control_point, last_two[1], steps);
+        result.extend(bezier_points.into_iter().skip(1));
     }
 
     result
 }
 
-pub fn draw_spline_polygon(canvas: &mut Canvas<Window>, input_points: &Vec<(f32, f32)>, steps: usize, color: Color) {
-    // Generate smooth spline points
+
+pub fn draw_spline_polygon(canvas: &mut Canvas<Window>, input_points: &[(f32, f32)], steps: usize, color: Color) {
     let smooth_points = generate_quadratic_bezier_from_points(input_points, steps);
-
-    // Collect x and y coordinates separately for the filled_polygon method
-    let x_points: Vec<i16> = smooth_points.iter().map(|&(x, _)| x).collect();
-    let y_points: Vec<i16> = smooth_points.iter().map(|&(_, y)| y).collect();
-
-    // Draw the filled polygon using the generated spline points
+    let (x_points, y_points): (Vec<_>, Vec<_>) = smooth_points.into_iter().unzip();
     canvas.filled_polygon(&x_points, &y_points, color).unwrap();
 }

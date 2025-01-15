@@ -51,7 +51,7 @@ impl Snake {
         
         // Draw eyes
         self.draw_eyes(canvas);
-        self.spine.display(canvas);
+        //self.spine.display(canvas);
     }
 
     fn draw_eyes(&self, canvas: &mut Canvas<Window>) {

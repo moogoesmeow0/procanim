@@ -33,7 +33,7 @@ impl Lizard {
     pub fn resolve(&mut self, mouse_x: f32, mouse_y: f32) {
         let head_pos = self.spine.joints[0];
         let mouse_pos = Vector2::new(mouse_x, mouse_y);
-        let target_pos = head_pos + (mouse_pos - head_pos).set_mag(15.0);
+        let target_pos = head_pos + (mouse_pos - head_pos).set_mag(10.0);
         self.spine.resolve(target_pos);
 
         for i in 0..self.arms.len() {
@@ -57,6 +57,7 @@ impl Lizard {
         self.draw_arms(canvas);
         self.draw_body(canvas);
         self.draw_eyes(canvas);
+        //self.spine.display(canvas);
     }
 
     fn draw_arms(&self, canvas: &mut Canvas<Window>) {

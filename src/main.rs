@@ -2,6 +2,7 @@
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
+use sdl2::gfx::framerate::{self, FPSManager};
 use std::time::Duration;
 
 mod chain;
@@ -18,6 +19,8 @@ use util::Vector2;
 const SCREEN_WIDTH: u32 = 2400;
 const SCREEN_HEIGHT: u32 = 1500;
 
+const rate: u32 = 60;
+
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
@@ -30,6 +33,7 @@ fn main() -> Result<(), String> {
     let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
 
     let mut event_pump = sdl_context.event_pump()?;
+    let mut fps = FPSManager::new();
 
     let mut fish = Fish::new(Vector2::new(SCREEN_WIDTH as f32 / 2.0, SCREEN_HEIGHT as f32 / 2.0));
     let mut snake = Snake::new(Vector2::new(SCREEN_WIDTH as f32 / 2.0, SCREEN_HEIGHT as f32 / 2.0));
@@ -38,6 +42,7 @@ fn main() -> Result<(), String> {
     let mut animal = 0;
 
     'running: loop {
+        println!("{}", fps.get_framerate());
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..} | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
@@ -73,7 +78,7 @@ fn main() -> Result<(), String> {
         }
 
         canvas.present();
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        let _ = fps.set_framerate(rate);
     }
 
     Ok(())
