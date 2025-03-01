@@ -1,4 +1,3 @@
-//main.rs
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
@@ -9,17 +8,19 @@ mod chain;
 mod fish;
 mod snake;
 mod lizard;
+mod toy;
 mod util;
 
 use fish::Fish;
 use snake::Snake;
 use lizard::Lizard;
 use util::Vector2;
+use toy::Toy;
 
-const SCREEN_WIDTH: u32 = 2400;
-const SCREEN_HEIGHT: u32 = 1500;
+const SCREEN_WIDTH: u32 = 1720;
+const SCREEN_HEIGHT: u32 = 1080;
 
-const rate: u32 = 60;
+const RATE: u32 = 60;
 
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
@@ -38,6 +39,7 @@ fn main() -> Result<(), String> {
     let mut fish = Fish::new(Vector2::new(SCREEN_WIDTH as f32 / 2.0, SCREEN_HEIGHT as f32 / 2.0));
     let mut snake = Snake::new(Vector2::new(SCREEN_WIDTH as f32 / 2.0, SCREEN_HEIGHT as f32 / 2.0));
     let mut lizard = Lizard::new(Vector2::new(SCREEN_WIDTH as f32 / 2.0, SCREEN_HEIGHT as f32 / 2.0));
+    let mut toy = Toy::new(Vector2::new(SCREEN_WIDTH as f32 / 3.0, SCREEN_HEIGHT as f32 / 3.0));
 
     let mut animal = 0;
 
@@ -77,8 +79,16 @@ fn main() -> Result<(), String> {
             _ => unreachable!(),
         }
 
+        toy.update(match animal {
+            0 => &fish.spine.joints[0],
+            1 => &snake.spine.joints[0],
+            2 => &lizard.spine.joints[0],
+            _ => unreachable!()
+        });
+        toy.display(&mut canvas);
+
         canvas.present();
-        let _ = fps.set_framerate(rate);
+        let _ = fps.set_framerate(RATE);
     }
 
     Ok(())

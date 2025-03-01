@@ -7,7 +7,7 @@ use crate::chain::Chain;
 use crate::util::Vector2;
 
 pub struct Fish {
-    spine: Chain,
+    pub spine: Chain,
     body_color: Color,
     fin_color: Color,
     body_width: Vec<f32>,

@@ -7,7 +7,7 @@ use crate::chain::Chain;
 use crate::util::Vector2;
 
 pub struct Lizard {
-    spine: Chain,
+    pub spine: Chain,
     arms: Vec<Chain>,
     arm_desired: Vec<Vector2>,
     body_width: Vec<f32>,

@@ -7,7 +7,7 @@ use crate::chain::Chain;
 use crate::util::Vector2;
 
 pub struct Snake {
-    spine: Chain,
+    pub spine: Chain,
 }
 
 impl Snake {
